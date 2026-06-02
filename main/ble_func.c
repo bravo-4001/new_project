@@ -1,4 +1,4 @@
-#include"ble_func.h"
+#include "ble_func.h"
 
 #include <errno.h>
 #include "nimble/nimble_port.h"
@@ -7,11 +7,10 @@
 #include "services/gatt/ble_svc_gatt.h"
 #include "nvs_flash.h"
 #include "main.h"
-
+#include "utils.h"
 
 /*static variables for logging*/
 static const char *TAG = "BLE_FUNC:";
-
 
 inline static void format_addr(char *addr_str, uint8_t addr[]);
 static void print_conn_desc(struct ble_gap_conn_desc *desc);
@@ -22,7 +21,6 @@ static uint8_t own_addr_type;
 static uint8_t addr_val[6] = {0};
 static char ble_device_name[] = DEVICE_NAME;
 uint16_t g_conn_handle = BLE_HS_CONN_HANDLE_NONE;
-
 
 inline static void format_addr(char *addr_str, uint8_t addr[])
 {
@@ -251,21 +249,15 @@ int gap_init(void)
 }
 /*=================gap server block end===================*/
 
-
-
 /*=================gatt server block start===================*/
 static uint16_t pcm_char_handle;
 static uint16_t pcm_char_val_len;
 static const ble_uuid128_t pcm_svc_uuid = BLE_UUID128_INIT(PCM_SVC_UUID);
 static const ble_uuid128_t pcm_char_uuid = BLE_UUID128_INIT(PCM_CHAR_UUID);
 
-//forward declaration of the access handler
+// forward declaration of the access handler
 static int pcm_char_access(uint16_t conn_handle, uint16_t attr_handle,
-                    struct ble_gatt_access_ctxt *ctxt, void *arg);
-
-
-
-
+                           struct ble_gatt_access_ctxt *ctxt, void *arg);
 
 static const struct ble_gatt_svc_def gatt_svr_svcs[] = {
     {
@@ -275,12 +267,12 @@ static const struct ble_gatt_svc_def gatt_svr_svcs[] = {
             {
                 .uuid = &pcm_char_uuid.u,
                 .access_cb = pcm_char_access,
+                .val_handle = &pcm_char_handle,  
                 .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_INDICATE,
             },
             {
                 0, /* No more characteristics in this service. */
-            }
-        },
+            }},
     },
     {
         0, /* No more services. */
@@ -297,7 +289,6 @@ void gatt_svr_subscribe_cb(struct ble_gap_event *event)
                  event->subscribe.attr_handle);
 }
 
-
 int gatt_svc_init(void)
 {
     int rc;
@@ -313,8 +304,6 @@ int gatt_svc_init(void)
 
     return 0;
 }
-
-
 
 /*=================nimble host config & task==============*/
 void ble_store_config_init(void);
@@ -379,7 +368,7 @@ esp_err_t ble_init(void)
     }
     if (err != ESP_OK)
     {
-        
+
         ESP_LOGE(TAG,
                  "NVS initialization failed: %s",
                  esp_err_to_name(err));
@@ -394,7 +383,6 @@ esp_err_t ble_init(void)
         return ret;
     }
     ESP_LOGI(TAG, "NimBLE stack initialised");
-
 
 #if CONFIG_BT_NIMBLE_GAP_SERVICE
     rc = gap_init();
@@ -430,31 +418,32 @@ esp_err_t ble_init(void)
     return ret;
 }
 
-
-
-//charactersic access handler
+// charactersic access handler
 static int pcm_char_access(uint16_t conn_handle, uint16_t attr_handle,
                            struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     uint8_t buf[256] = {0};
     uint16_t len = 0;
     esp_err_t ret;
-     /* Handle write operation */
+    /* Handle write operation */
     if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR)
     {
-        
+
         len = ctxt->om->om_len;
         if (len > 0)
         {
             os_mbuf_copydata(ctxt->om, 0, len, buf);
-            if(buf[0] == WRITE_CMD){
-               ret = read_from_ble(buf, &len);
-               if(ret != ESP_OK){
-                    ESP_LOGE(TAG, "Failed to read data for PCM characteristic: %d", ret);
+            if (buf[0] == WRITE_CMD)
+            {
+                ret = read_from_ble(buf, len);
+                if (ret != ESP_OK)
+                {
+                    ESP_LOGE(TAG, "Failed to write data for PCM characteristic: %d", ret);
                     return BLE_ATT_ERR_UNLIKELY;
                 }
-                else{
-                    ESP_LOGI(TAG, "Data read for PCM characteristic: %.*s", len, buf);
+                else
+                {
+                    ESP_LOGI(TAG, "Data write for PCM characteristic: %.*s", len, buf);
                     // Process the data read as needed
                     send_indicate(WRITE_CMD, true);
                 }
@@ -464,28 +453,30 @@ static int pcm_char_access(uint16_t conn_handle, uint16_t attr_handle,
             // Process the received data as needed
         }
     }
-    else if(ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR)
+    else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR)
     {
-        
+
         ret = write_to_ble(buf, &len);
-        
-        if (ret != ESP_OK)        {
+
+        if (ret != ESP_OK)
+        {
             ESP_LOGE(TAG, "Failed to read data for PCM characteristic: %d", ret);
             return BLE_ATT_ERR_UNLIKELY;
         }
-        else{
+        else
+        {
             ESP_LOGI(TAG, "Read data for PCM characteristic: %.*s", len, buf);
-            if(len == 0){
+            if (len == 0)
+            {
                 ESP_LOGW(TAG, "No data to read for PCM characteristic");
                 return BLE_ATT_ERR_UNLIKELY;
             }
-            else{
+            else
+            {
                 // Process the data to be sent as needed
                 os_mbuf_append(ctxt->om, buf, len);
                 // send_indicate(READ_CMD, true);
-
             }
-
         }
 
         // Handle read request if necessary
@@ -497,23 +488,33 @@ static int pcm_char_access(uint16_t conn_handle, uint16_t attr_handle,
 
 /*==================gatt server block end===================*/
 
-void send_indicate(uint8_t cmd,bool success_flag){
+void send_indicate(uint8_t cmd, bool success_flag)
+{
     if (g_conn_handle == BLE_HS_CONN_HANDLE_NONE)
     {
         ESP_LOGW(TAG, "No active connection to send indication");
         return;
     }
 
-    uint8_t indicate_data[2] = {0};
-    indicate_data[0] = cmd;
-    indicate_data[1] = success_flag ? 1 : 0;
+    uint8_t indicate_data[3] = {0};
+    indicate_data[0] = 0x03;
+    indicate_data[1] = cmd;
+    indicate_data[2] = success_flag ? 1 : 0;
 
-    int rc = ble_gatts_chr_indicate(g_conn_handle, pcm_char_handle, indicate_data, sizeof(indicate_data));
+    struct os_mbuf *om = ble_hs_mbuf_from_flat(indicate_data, sizeof(indicate_data));
+    if (om == NULL)
+    {
+        ESP_LOGE(TAG, "Failed to allocate mbuf");
+        return;
+    }
+
+    int rc = ble_gatts_indicate_custom(g_conn_handle, pcm_char_handle, om);
+
     if (rc != 0)
     {
         ESP_LOGE(TAG, "Failed to send indication: %d", rc);
     }
-     else
+    else
     {
         ESP_LOGI(TAG, "Indication sent successfully: cmd=%d, success=%d", cmd, success_flag);
     }

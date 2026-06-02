@@ -55,6 +55,6 @@ extern ESPToDSPData_t transmit_data;
 extern DSPToESPData_t receive_data;
 
 extern esp_err_t write_to_ble(uint8_t* data, uint16_t *len);
-extern esp_err_t read_from_ble(uint8_t* data,  uint16_t *len);
+extern esp_err_t read_from_ble(uint8_t* data,  uint16_t len);
 
 #endif
