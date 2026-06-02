@@ -76,4 +76,8 @@ Desktop.ini
 *.workspace # General workspace files, can be from various tools
 *.suo       # Visual Studio Solution User Options
 *.sln.docstates # Visual Studio
+<<<<<<< HEAD
 .vscode/
+=======
+.vscode/
+>>>>>>> decd6841e6bf247a6903a3cbd815012cd3f83b0f
