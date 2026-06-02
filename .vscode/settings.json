@@ -7,7 +7,7 @@
     "--query-driver=**",
     "--compile-commands-dir=c:\\Users\\HP\\Documents\\esp_32\\ESP_32_PROJECTS\\new_project\\build"
   ],
-  "idf.currentSetup": "C:/Espressif/frameworks/esp-idf-v5.4.3/",
+  "idf.currentSetup": "d:\\installed\\esp\\v5.5.2\\esp-idf",
   "idf.flashType": "UART",
-  "idf.portWin": "COM16"
+  "idf.portWin": "COM12"
 }

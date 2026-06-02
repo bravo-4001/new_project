@@ -1,6 +1,7 @@
 #include "tasks.h"
 #include "twai.h"
 #include "main.h"
+#include "ble_func.h"
 
 off_on state;
 ESPToDSPData_t transmit_data;
@@ -26,4 +27,12 @@ void app_main(void)
     twai_configuration();
     xTaskCreate(can_seq_trans_task, "can_seq_trans_task", 2*1024, NULL, 5, &can_seq_trans_task_handle);
     xTaskCreate(can_seq_receive_task, "can_seq_receive_task", 2*1024, NULL, 5, &can_seq_receive_task_handle);
+
+    // BLE CONFIGURATION DONE
+    esp_err_t ret = ble_init(); 
+    if(ret != ESP_OK){
+        ESP_LOGE("ble init", "BLE initialization failed with error: %d", ret);
+    } else {
+        ESP_LOGI("ble init", "BLE initialization successful");
+    }
 }
