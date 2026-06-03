@@ -115,7 +115,7 @@ esp_err_t write_to_ble(uint8_t *data, uint16_t *len)
     return ESP_OK;
 }
 
-esp_err_t read_from_ble(uint8_t *data, uint16_t len)
+esp_err_t read_from_ble(uint8_t *data, uint16_t* len)
 {
     if (data == NULL)
     {
@@ -179,6 +179,53 @@ esp_err_t read_from_ble(uint8_t *data, uint16_t len)
         return ESP_ERR_INVALID_SIZE;
     }
     transmit_data.ChargingState = data[index++];
+
+    return ESP_OK;
+}
+
+esp_err_t read_buck_settings(uint8_t *data, uint16_t* len){
+
+    if (data == NULL || len == NULL)
+    {
+        return ESP_ERR_INVALID_ARG;
+    }
+    // Writing the code to make the application read the data to be transmitted 
+    uint16_t idx = 0;
+    uint16_t buffer = 0;
+    uint32_t buffer32 = 0;
+
+    data[idx++]= 0x01;      // Packet Type
+
+    // For the turn on 
+    data[idx++] = 1;
+    buffer = (uint16_t)(transmit_data.TurnOn);
+    data[idx++] = buffer & 0xFF;
+
+    // For the target voltage
+    data[idx++] = 3;
+    buffer32 = (uint32_t)(transmit_data.TargetVoltage * 10);
+    data[idx++] = (buffer32 >> 16) & 0xFF;
+    data[idx++] = (buffer32 >> 8) & 0xFF;
+    data[idx++] = buffer32 & 0xFF;
+
+    // For the target current 
+    data[idx++] = 3;
+    buffer32 = (uint32_t)(transmit_data.TargetCurrent * 10);
+    data[idx++] = (buffer32 >> 16) & 0xFF;
+    data[idx++] = (buffer32 >> 8) & 0xFF;
+    data[idx++] = buffer32 & 0xFF;
+
+    // For the maximum power 
+    data[idx++] = 2;
+    buffer = (uint16_t)(transmit_data.MaximumPower * 10);
+    data[idx++] = (buffer >> 8) & 0xFF;
+    data[idx++] = buffer & 0xFF;
+
+    // For the charging state 
+    data[idx++] = 1;
+    data[idx++] = transmit_data.ChargingState;
+
+    *len = idx;
 
     return ESP_OK;
 }
