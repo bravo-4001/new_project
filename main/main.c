@@ -15,6 +15,13 @@ void app_main(void)
     transmit_data.TargetCurrent = 10.6f*10.0f;
     transmit_data.TurnOn = 1;
     transmit_data.TargetVoltage = 152.5*10;
+    
+    receive_data.HeatSinkTemp1 = 0;
+    receive_data.HeatSinkTemp2 = 2;
+    receive_data.HeatSinkTemp3 = 5;
+    receive_data.HeatSinkTemp4 = 25;
+    receive_data.InductorTemp1 = 6;
+    receive_data.InductorTemp2 = 10;
 
     // This whole code is for the Led blinking 
     gpio_reset_pin(BLINK_LED);
