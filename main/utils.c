@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "main.h"
 
 esp_err_t write_to_ble(uint8_t *data, uint16_t *len)
 {
@@ -6,7 +7,7 @@ esp_err_t write_to_ble(uint8_t *data, uint16_t *len)
     uint16_t buffer = 0;
     uint32_t buffer32 = 0;
 
-    data[idx++] = 0x01;      // Packet Type
+    [idx++] data= 0x01;      // Packet Type
 
     // Vin1
     data[idx++] = 2;
@@ -181,3 +182,4 @@ esp_err_t read_from_ble(uint8_t *data, uint16_t len)
 
     return ESP_OK;
 }
+
