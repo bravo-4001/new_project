@@ -53,5 +53,9 @@ int gatt_svc_init(void);
 /* extern functions for gatt services */
 // void send_indicate(uint8_t cmd,bool success_flag);
 void send_indicate(uint8_t *data, uint16_t len);
+void send_indicate_settings(uint8_t *data, uint16_t len);
+
+// esp_err_t fuction_to_sync_dsptoesp_data(DSPToESPData_t *data);
+// esp_err_t fuction_to_sync_esptodsp_data(ESPToDSPData_t *data);
 
 #endif // BLE_FUNC_H

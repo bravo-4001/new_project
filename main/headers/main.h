@@ -2,6 +2,13 @@
 #define MAIN_H
 #include <stdio.h>
 #include <stdint.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+
+//global variables and mutexes
+extern uint8_t is_settings_updated; // flag to indicate if settings have been updated and need to be sent to DSP
+extern SemaphoreHandle_t settings_mutex; // mutex to protect access to the settings data
+extern SemaphoreHandle_t pcm_mutex; // mutex to protect access to the pcm data
 
 // structures definitons for the can transmit messages 
 typedef struct
@@ -56,5 +63,7 @@ extern DSPToESPData_t receive_data;
 
 extern esp_err_t write_to_ble(uint8_t* data, uint16_t *len);
 extern esp_err_t read_from_ble(uint8_t* data,  uint16_t len);
+
+extern esp_err_t read_buck_settings(uint8_t *data, uint16_t* len);
 
 #endif
