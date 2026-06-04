@@ -224,7 +224,7 @@ esp_err_t read_from_ble(uint8_t *data, uint16_t len)
     {
         return ESP_ERR_INVALID_ARG;
     }
-    printf("\n");
+    
     if (data[0] != 0x02)
     {
         return ESP_ERR_INVALID_RESPONSE;
@@ -233,57 +233,54 @@ esp_err_t read_from_ble(uint8_t *data, uint16_t len)
     xSemaphoreTake(settings_mutex , portMAX_DELAY);
 
     uint16_t index = 1;
-    uint16_t buffer = 0;
+    uint32_t buffer = 0;
     uint8_t field_len = 0;
+    uint8_t i = 0;
 
     // TurnOn
     field_len = data[index++];
-    // if (field_len != 1)
-    // {
-    //     return ESP_ERR_INVALID_SIZE;
-    // }
-    transmit_data.TurnOn = data[index++];
-
+    buffer = 0;
+    for (i=0; i<field_len; i++){
+        uint8_t bit_shift = 8*(field_len-1-i);
+        buffer |= (data[index++]<<bit_shift);
+    }
+    transmit_data.TurnOn = (uint8_t)buffer;
+    
     // TargetVoltage
     field_len = data[index++];
-    // if (field_len != 2)
-    // {
-    //     return ESP_ERR_INVALID_SIZE;
-    // }
-    buffer = ((uint16_t)data[index] << 8) |
-             ((uint16_t)data[index + 1]);
-    index += 2;
+    buffer = 0;
+    for (i=0; i<field_len; i++){
+        uint8_t bit_shift = 8*(field_len-1-i);
+        buffer |= (data[index++]<<bit_shift);
+    }
     transmit_data.TargetVoltage = (float)buffer / 10.0f;
 
     // TargetCurrent
     field_len = data[index++];
-    // if (field_len != 2)
-    // {
-    //     return ESP_ERR_INVALID_SIZE;
-    // }
-    buffer = ((uint16_t)data[index] << 8) |
-             ((uint16_t)data[index + 1]);
-    index += 2;
+    buffer = 0;
+    for (i=0; i<field_len; i++){
+        uint8_t bit_shift = 8*(field_len-1-i);
+        buffer |= (data[index++]<<bit_shift);
+    }
     transmit_data.TargetCurrent = (float)buffer / 10.0f;
 
     // MaximumPower
     field_len = data[index++];
-    // if (field_len != 2)
-    // {
-    //     return ESP_ERR_INVALID_SIZE;
-    // }
-    buffer = ((uint16_t)data[index] << 8) |
-             ((uint16_t)data[index + 1]);
-    index += 2;
+    buffer = 0;
+    for (i=0; i<field_len; i++){
+        uint8_t bit_shift = 8*(field_len-1-i);
+        buffer |= (data[index++]<<bit_shift);
+    }
     transmit_data.MaximumPower = (float)buffer / 10.0f;
 
     // ChargingState
     field_len = data[index++];
-    // if (field_len != 1)
-    // {
-    //     return ESP_ERR_INVALID_SIZE;
-    // }
-    transmit_data.ChargingState = data[index++];
+    buffer = 0;
+    for (i=0; i<field_len; i++){
+        uint8_t bit_shift = 8*(field_len-1-i);
+        buffer |= (data[index++]<<bit_shift);
+    }
+    transmit_data.ChargingState = (uint8_t)buffer;
 
     printf("Data read from BLE:\n");
     printf("TurnOn           = %d\n", transmit_data.TurnOn);
@@ -292,47 +289,6 @@ esp_err_t read_from_ble(uint8_t *data, uint16_t len)
     printf("MaximumPower     = %.2f\n", transmit_data.MaximumPower);
     printf("ChargingState    = %d\n", transmit_data.ChargingState);
 
-    return ESP_OK;
-}
-
-esp_err_t write_settings_to_ble(uint8_t *data, uint16_t *len)
-{
-    uint16_t idx = 0;
-    uint16_t buffer = 0;
-
-    data[idx++] = 0x01; // Packet Type
-
-    // TurnOn
-    data[idx++] = 1;
-    data[idx++] = transmit_data.TurnOn;
-
-    // TargetVoltage
-    data[idx++] = 2;
-    buffer = (uint16_t)(transmit_data.TargetVoltage * 10);
-    data[idx++] = (buffer >> 8) & 0xFF;
-    data[idx++] = buffer & 0xFF;
-
-    // TargetCurrent
-    data[idx++] = 2;
-    buffer = (uint16_t)(transmit_data.TargetCurrent * 10);
-    data[idx++] = (buffer >> 8) & 0xFF;
-    data[idx++] = buffer & 0xFF;
-
-    // MaximumPower
-    data[idx++] = 2;
-    buffer = (uint16_t)(transmit_data.MaximumPower * 10);
-    data[idx++] = (buffer >> 8) & 0xFF;
-    data[idx++] = buffer & 0xFF;
-
-    // ChargingState
-    data[idx++] = 1;
-    data[idx++] = transmit_data.ChargingState;
-
-    *len = idx;
-
-    ESP_LOGI("UTILS", "Data written to BLE for PCM setting characteristic: TurnOn=%d, TargetVoltage=%.2f, TargetCurrent=%.2f, MaximumPower=%.2f, ChargingState=%d",
-             transmit_data.TurnOn, transmit_data.TargetVoltage, transmit_data.TargetCurrent,
-             transmit_data.MaximumPower, transmit_data.ChargingState);
     return ESP_OK;
 }
 
