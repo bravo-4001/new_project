@@ -10,6 +10,10 @@ DSPToESPData_t receive_data;
 void app_main(void)
 {
 
+    uint8_t is_settings_updated = 0;
+    SemaphoreHandle_t settings_mutex = xSemaphoreCreateMutex();
+    SemaphoreHandle_t pcm_mutex = xSemaphoreCreateMutex();
+
     transmit_data.ChargingState = 3;
     transmit_data.MaximumPower =  150.0f*10.0f;
     transmit_data.TargetCurrent = 10.6f*10.0f;

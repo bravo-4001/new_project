@@ -12,6 +12,9 @@
 /*static variables for logging*/
 static const char *TAG = "BLE_FUNC:";
 
+// static DSPToESPData_t ble_pcm_data; // global variable to show pcm data in the pcm char
+// static ESPToDSPData_t ble_pcm_setting_data; // global variable to show pcm setting data in the pcm setting char
+
 inline static void format_addr(char *addr_str, uint8_t addr[]);
 static void print_conn_desc(struct ble_gap_conn_desc *desc);
 static void start_advertising(void);
@@ -276,13 +279,13 @@ static const struct ble_gatt_svc_def gatt_svr_svcs[] = {
                 .uuid = &pcm_char_uuid.u,
                 .access_cb = pcm_char_access,
                 .val_handle = &pcm_char_handle,  
-                .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_INDICATE,
+                .flags =  BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_INDICATE,
             },
             {
                 .uuid = &pcm_setting_char_uuid.u,
                 .access_cb = pcm_setting_char_access,
                 .val_handle = &pcm_setting_char_handle,
-                .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_INDICATE,
+                .flags =  BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_INDICATE,
             },
             {
                 0, /* No more characteristics in this service. */
@@ -447,33 +450,34 @@ static int pcm_char_access(uint16_t conn_handle, uint16_t attr_handle,
         if (len > 0)
         {
             os_mbuf_copydata(ctxt->om, 0, len, buf);
-            if (buf[0] == WRITE_CMD)
-            {
-                uint8_t cmd = buf[0];
-                ESP_LOGI(TAG, "Received write command for PCM characteristic: cmd=%d", cmd);
-                ret = read_from_ble(buf, len);
-                if (ret != ESP_OK)
-                {
-                    ESP_LOGE(TAG, "Failed to write data for PCM characteristic: %d", ret);
-                                            uint8_t indicate_data[3] = {0};
-                        indicate_data[0] = 0x03;
-                        indicate_data[1] = cmd;
-                        indicate_data[2] = 0x00; 
-                    send_indicate(indicate_data, sizeof(indicate_data));
-                    return BLE_ATT_ERR_UNLIKELY;
-                }
-                else
-                {
-                    ESP_LOGI(TAG, "Data write for PCM characteristic: %.*s", len, buf);
-                    // Process the data read as needed
-                        uint8_t indicate_data[3] = {0};
-                        indicate_data[0] = 0x03;
-                        indicate_data[1] = cmd;
-                        indicate_data[2] = 0x01; // success flag
-                    send_indicate(indicate_data, sizeof(indicate_data));
-                }
-            }
-            else if(buf[0] == READ_CMD)
+            // if (buf[0] == WRITE_CMD)
+            // {
+            //     uint8_t cmd = buf[0];
+            //     ESP_LOGI(TAG, "Received write command for PCM characteristic: cmd=%d", cmd);
+            //     ret = read_from_ble(buf, len);
+            //     if (ret != ESP_OK)
+            //     {
+            //         ESP_LOGE(TAG, "Failed to write data for PCM characteristic: %d", ret);
+            //                                 uint8_t indicate_data[3] = {0};
+            //             indicate_data[0] = 0x03;
+            //             indicate_data[1] = cmd;
+            //             indicate_data[2] = 0x00; 
+            //         send_indicate(indicate_data, sizeof(indicate_data));
+            //         return BLE_ATT_ERR_UNLIKELY;
+            //     }
+            //     else
+            //     {
+            //         ESP_LOGI(TAG, "Data write for PCM characteristic: %.*s", len, buf);
+            //         // Process the data read as needed
+            //             uint8_t indicate_data[3] = {0};
+            //             indicate_data[0] = 0x03;
+            //             indicate_data[1] = cmd;
+            //             indicate_data[2] = 0x01; // success flag
+            //         send_indicate(indicate_data, sizeof(indicate_data));
+            //     }
+            // }
+            // else if(buf[0] == READ_CMD)
+            if(buf[0] == READ_CMD)
             {
                 ESP_LOGI(TAG, "Received read command for PCM characteristic");
                 // Handle the read command as needed
@@ -511,40 +515,160 @@ static int pcm_char_access(uint16_t conn_handle, uint16_t attr_handle,
             // Process the received data as needed
         }
     }
-    else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR)
-    {
+    // else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR)
+    // {
 
-        ret = write_to_ble(buf, &len);
+    //     ret = write_to_ble(buf, &len);
 
-        if (ret != ESP_OK)
-        {
-            ESP_LOGE(TAG, "Failed to read data for PCM characteristic: %d", ret);
-            return BLE_ATT_ERR_UNLIKELY;
-        }
-        else
-        {
-            ESP_LOGI(TAG, "Read data for PCM characteristic: %.*s", len, buf);
-            if (len == 0)
-            {
-                ESP_LOGW(TAG, "No data to read for PCM characteristic");
-                return BLE_ATT_ERR_UNLIKELY;
-            }
-            else
-            {
-                // Process the data to be sent as needed
-                os_mbuf_append(ctxt->om, buf, len);
-                // send_indicate(READ_CMD, true);
-            }
-        }
+    //     if (ret != ESP_OK)
+    //     {
+    //         ESP_LOGE(TAG, "Failed to read data for PCM characteristic: %d", ret);
+    //         return BLE_ATT_ERR_UNLIKELY;
+    //     }
+    //     else
+    //     {
+    //         ESP_LOGI(TAG, "Read data for PCM characteristic: %.*s", len, buf);
+    //         if (len == 0)
+    //         {
+    //             ESP_LOGW(TAG, "No data to read for PCM characteristic");
+    //             return BLE_ATT_ERR_UNLIKELY;
+    //         }
+    //         else
+    //         {
+    //             // Process the data to be sent as needed
+    //             os_mbuf_append(ctxt->om, buf, len);
+    //             // send_indicate(READ_CMD, true);
+    //         }
+    //     }
 
-        // Handle read request if necessary
-        ESP_LOGI(TAG, "Read request received on PCM characteristic");
-    }
+    //     // Handle read request if necessary
+    //     ESP_LOGI(TAG, "Read request received on PCM characteristic");
+    // }
 
     return 0;
 }
 
+static int pcm_setting_char_access(uint16_t conn_handle, uint16_t attr_handle,
+                           struct ble_gatt_access_ctxt *ctxt, void *arg){
+    uint8_t buf[256] = {0};
+    uint16_t len = 0;
+    uint8_t cmd = 0;
+    esp_err_t ret;
+    /* Handle write operation */
+    if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR)
+    {
 
+        len = ctxt->om->om_len;
+        if (len > 0)
+        {
+            os_mbuf_copydata(ctxt->om, 0, len, buf);
+
+            
+            if (buf[0] == WRITE_CMD)
+            {
+                uint8_t cmd = buf[0];
+                // ESP_LOGI(TAG, "write command: cmd=%d", cmd);
+                ret = read_from_ble(buf, len);
+               
+                ESP_LOGI(TAG,"RET value from read_from_ble: %d", ret);
+                if (ret != ESP_OK)
+                {
+                    ESP_LOGE(TAG, "Failed to write data for PCM setting characteristic: %d", ret);
+                                            uint8_t indicate_data[3] = {0};
+                        indicate_data[0] = 0x03;
+                        indicate_data[1] = cmd;
+                        indicate_data[2] = 0x00; 
+                    send_indicate_settings(indicate_data, sizeof(indicate_data));
+                    return BLE_ATT_ERR_UNLIKELY;
+                }
+                else
+                {
+                    ESP_LOGI(TAG, "Data write for PCM setting characteristic: %.*s", len, buf);
+                    // Process the data read as needed
+                        uint8_t indicate_data[3] = {0};
+                        indicate_data[0] = 0x03;
+                        indicate_data[1] = cmd;
+                        indicate_data[2] = 0x01; // success flag
+                    send_indicate_settings(indicate_data, sizeof(indicate_data));
+                }
+            }
+            else if(buf[0] == READ_CMD)
+            {
+                ESP_LOGI(TAG, "Received read command for PCM setting characteristic");
+                // Handle the read command as needed
+                        ret = read_buck_settings(buf, &len);
+                        uint8_t indicate_data[3] = {0};
+                        uint8_t cmd = buf[0];
+                        ESP_LOGI(TAG, "Processing read command for PCM setting characteristic: cmd=%d", cmd);
+                        // ESP_LOGI(TAG,"BUFFER VALUE from write_settings_to_ble: %.*s", len, buf);
+                        // send_indicate_settings(buf, len);
+
+                        if (ret != ESP_OK)
+                        {
+                            ESP_LOGE(TAG, "Failed to read data for PCM setting characteristic: %d", ret);
+                            indicate_data[0] = 0x03;
+                            indicate_data[1] = cmd;
+                            indicate_data[2] = 0x00; 
+                            send_indicate_settings(indicate_data, sizeof(indicate_data));
+                            return BLE_ATT_ERR_UNLIKELY;
+                        }
+                        else
+                        {
+
+                            if (len == 0)
+                            {
+                                indicate_data[2] = 0x00; // failure flag
+                                send_indicate_settings(indicate_data, sizeof(indicate_data));
+                                ESP_LOGW(TAG, "No data to read for PCM setting characteristic");
+                                return BLE_ATT_ERR_UNLIKELY;
+                            }
+                            else
+                            {
+
+                                send_indicate_settings(buf, len);
+                              
+                            }
+                        }
+                
+            }
+
+            ESP_LOGI(TAG, "Received data on PCM setting characteristic: %.*s", len, buf);
+            // Process the received data as needed
+        }
+    }
+    // else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR)
+    // {
+
+    //     ret = write_to_ble(buf, &len);
+
+    //     if (ret != ESP_OK)
+    //     {
+    //         ESP_LOGE(TAG, "Failed to read data for PCM characteristic: %d", ret);
+    //         return BLE_ATT_ERR_UNLIKELY;
+    //     }
+    //     else
+    //     {
+    //         ESP_LOGI(TAG, "Read data for PCM characteristic: %.*s", len, buf);
+    //         if (len == 0)
+    //         {
+    //             ESP_LOGW(TAG, "No data to read for PCM characteristic");
+    //             return BLE_ATT_ERR_UNLIKELY;
+    //         }
+    //         else
+    //         {
+    //             // Process the data to be sent as needed
+    //             os_mbuf_append(ctxt->om, buf, len);
+    //             // send_indicate(READ_CMD, true);
+    //         }
+    //     }
+
+    //     // Handle read request if necessary
+    //     ESP_LOGI(TAG, "Read request received on PCM characteristic");
+    // }
+
+    return 0;
+                    
+}
 
 
 /*==================gatt server block end===================*/
@@ -580,3 +704,73 @@ void send_indicate(uint8_t *data, uint16_t len)
         ESP_LOGI(TAG, "Indication sent successfully: ");
     }
 }
+
+void send_indicate_settings(uint8_t *data, uint16_t len)
+{
+    if (g_conn_handle == BLE_HS_CONN_HANDLE_NONE)
+    {
+        ESP_LOGW(TAG, "No active connection to send indication");
+        return;
+    }
+
+    if(len > 180) // for limiting the data length to avoid fragmentation issues
+    {
+        ESP_LOGW(TAG, "Data length exceeds 180 bytes, truncating for indication");
+        len = 180;
+    }
+    struct os_mbuf *om = ble_hs_mbuf_from_flat(data, len);
+    if (om == NULL)
+    {
+        ESP_LOGE(TAG, "Failed to allocate mbuf");
+        return;
+    }
+
+    int rc = ble_gatts_indicate_custom(g_conn_handle, pcm_setting_char_handle, om);
+
+    if (rc != 0)
+    {
+        ESP_LOGE(TAG, "Failed to send indication: %d", rc);
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Indication sent successfully: ");
+    }
+}
+
+
+// // Additional utility functions for data synchronization can be implemented here
+// esp_err_t fuction_to_sync_dsptoesp_data(DSPToESPData_t *data){
+//     // Implement the logic to sync data from DSP to ESP
+//     // This function can be called when new data is received from the DSP
+//     // and needs to be updated in the global variable for BLE indication
+
+//     if (data == NULL)
+//     {
+//         ESP_LOGE(TAG, "Invalid input: data pointer is NULL");
+//         return ESP_ERR_INVALID_ARG;
+//     }
+
+//     // Update the global variable with the new data
+//     ble_pcm_data = *data;
+
+//     ESP_LOGI(TAG, "Synchronized DSP to ESP data successfully");
+//     return ESP_OK;
+// }
+
+// esp_err_t fuction_to_sync_esptodsp_data(ESPToDSPData_t *data){
+//     // Implement the logic to sync data from ESP to DSP
+//     // This function can be called when new data is received from the BLE write
+//     // and needs to be updated in the global variable for processing by the DSP
+
+//     if (data == NULL)
+//     {
+//         ESP_LOGE(TAG, "Invalid input: data pointer is NULL");
+//         return ESP_ERR_INVALID_ARG;
+//     }
+
+//     // Update the global variable with the new data
+//     ble_pcm_setting_data = *data;
+
+//     ESP_LOGI(TAG, "Synchronized ESP to DSP data successfully");
+//     return ESP_OK;
+// }
