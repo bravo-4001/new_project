@@ -2,6 +2,7 @@
 #include "main.h"
 #include <errno.h>
 #include "esp_log.h"
+#include "tasks.h"
 
 // esp_err_t write_to_ble(uint8_t *data, uint16_t *len, void *struct_data)
 esp_err_t write_to_ble(uint8_t *data, uint16_t *len)
@@ -289,6 +290,10 @@ esp_err_t read_from_ble(uint8_t *data, uint16_t len)
     printf("MaximumPower     = %.2f\n", transmit_data.MaximumPower);
     printf("ChargingState    = %d\n", transmit_data.ChargingState);
 
+    // is_settings_updated = 1; // Set the flag to indicate that settings have been updated and need to be sent to DSP
+    xTaskNotifyGive(can_seq_trans_task_handle); // Notify the CAN transmission task to send the updated settings to DSP
+    xSemaphoreGive(settings_mutex);
+
     return ESP_OK;
 }
 
@@ -300,6 +305,8 @@ esp_err_t read_buck_settings(uint8_t *data, uint16_t *len)
         return ESP_ERR_INVALID_ARG;
     }
     // Writing the code to make the application read the data to be transmitted
+
+    xSemaphoreTake(settings_mutex , portMAX_DELAY);
     uint16_t idx = 0;
     uint16_t buffer = 0;
     uint32_t buffer32 = 0;
@@ -336,6 +343,8 @@ esp_err_t read_buck_settings(uint8_t *data, uint16_t *len)
     data[idx++] = transmit_data.ChargingState;
 
     *len = idx;
+
+    xSemaphoreGive(settings_mutex);
 
     return ESP_OK;
 }

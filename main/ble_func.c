@@ -426,12 +426,12 @@ esp_err_t ble_init(void)
     nimble_host_config_init();
     ESP_LOGI(TAG, "NimBLE host configured with callbacks and store");
 
-    xTaskCreate(nimble_host_task,
+    xTaskCreatePinnedToCore(nimble_host_task,
                 "NimBLE Host",
                 4 * 1024,
                 NULL,
                 5,
-                NULL);
+                NULL, 0);
     return ret;
 }
 

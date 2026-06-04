@@ -57,7 +57,7 @@ esp_err_t transmit_seq_1(uint8_t* payload){
     //     status.rx_error_counter,
     //     status.tx_failed_count);
 
-    esp_err_t err =  twai_transmit(&message_seq_1, pdMS_TO_TICKS(200));
+    esp_err_t err =  twai_transmit(&message_seq_1, pdMS_TO_TICKS(0));
     return err;
 }
 
@@ -74,9 +74,10 @@ void receive_seq_1(uint32_t* data_received){
     //     uint32_t flags;
     // } twai_message_t;
    
-    esp_err_t err = twai_receive(&message, pdMS_TO_TICKS(1000));
-    if (err == ESP_OK){
-        printf("message is successfully received\n");
+    esp_err_t err = twai_receive(&message, pdMS_TO_TICKS(0));
+    if (err != ESP_OK){
+        // printf("message is successfully received\n");
+        return;
     }
 
     for (int i=0; i<8; i++){
